@@ -5,7 +5,7 @@
 set -xe
 USER_ID=$(whoami)
 LOG_PATH=/home/$(whoami)/logs
-MOUNT_DIR=/home/$USER_ID/.cache/huggingface/hub
+MOUNT_DIR=~/.cache/huggingface/hub
 IMAGE_REPO=${IMAGE_REPO:-}
 IMAGE_TAG=${IMAGE_TAG:-latest}
 
@@ -39,9 +39,9 @@ function validate_docsum() {
     # generate a random logfile name to avoid conflict among multiple runners
     LOGFILE=$LOG_PATH/curlmega_$NAMESPACE.log
     # Curl the Mega Service
-    curl http://${ip_address}:${port}/v1/docsum \
-    -H 'Content-Type: application/json' \
-    -d '{"messages": "Text Embeddings Inference (TEI) is a toolkit for deploying and serving open source text embeddings and sequence classification models. TEI enables high-performance extraction for the most popular models, including FlagEmbedding, Ember, GTE and E5."}' > $LOGFILE
+    curl -X POST http://${host_ip}:8888/v1/docsum \
+    -H "Content-Type: application/json" \
+    -d '{"type": "text", "messages": "Text Embeddings Inference (TEI) is a toolkit for deploying and serving open source text embeddings and sequence classification models. TEI enables high-performance extraction for the most popular models, including FlagEmbedding, Ember, GTE and E5."}' > $LOGFILE
     exit_code=$?
     if [ $exit_code -ne 0 ]; then
         echo "Megaservice docsum failed, please check the logs in $LOGFILE!"
@@ -51,7 +51,7 @@ function validate_docsum() {
     echo "Checking response results, make sure the output is reasonable. "
     local status=false
     if [[ -f $LOGFILE ]] && \
-    [[ $(grep -c "versatile toolkit" $LOGFILE) != 0 ]]; then
+    [[ $(grep -c "[DONE]" $LOGFILE) != 0 ]]; then
         status=true
     fi
 
