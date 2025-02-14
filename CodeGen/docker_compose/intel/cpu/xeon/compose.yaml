@@ -69,6 +69,93 @@ services:
     ipc: host
     restart: always
 
+  redis-vector-db:
+    image: redis/redis-stack:7.2.0-v9
+    container_name: redis-vector-db
+    ports:
+      - "${REDIS_DB_PORT}:${REDIS_DB_PORT}"
+      - "${REDIS_INSIGHTS_PORT}:${REDIS_INSIGHTS_PORT}"
+  
+  dataprep-redis-server:
+    image: ${REGISTRY:-opea}/dataprep:${TAG:-latest}
+    container_name: dataprep-redis-server
+    depends_on:
+      - redis-vector-db
+      # - lvm-llava
+    ports:
+      - "${DATAPREP_REDIS_PORT}:5000"
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      INDEX_NAME: ${INDEX_NAME}
+      # LVM_ENDPOINT: "http://${LVM_SERVICE_HOST_IP}:${LVM_PORT}/v1/lvm"
+      HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+      LOGFLAG: true
+    restart: unless-stopped
+  
+  embedding-multimodal-bridgetower:
+    image: ${REGISTRY:-opea}/embedding-multimodal-bridgetower:${TAG:-latest}
+    container_name: embedding-multimodal-bridgetower
+    ports:
+      - ${EMM_BRIDGETOWER_PORT}:${EMM_BRIDGETOWER_PORT}
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      EMM_BRIDGETOWER_PORT: ${EMM_BRIDGETOWER_PORT}
+      PORT: ${EMM_BRIDGETOWER_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "http_proxy='' curl -f http://localhost:${EMM_BRIDGETOWER_PORT}/v1/health_check"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 30s
+    entrypoint: ["python", "bridgetower_server.py", "--device", "cpu", "--model_name_or_path", $EMBEDDING_MODEL_ID]
+    restart: unless-stopped
+
+  embedding:
+    image: ${REGISTRY:-opea}/embedding:${TAG:-latest}
+    container_name: embedding
+    depends_on:
+      embedding-multimodal-bridgetower:
+        condition: service_healthy
+    ports:
+      - ${MM_EMBEDDING_PORT_MICROSERVICE}:${MM_EMBEDDING_PORT_MICROSERVICE}
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      MMEI_EMBEDDING_ENDPOINT: ${MMEI_EMBEDDING_ENDPOINT}
+      MM_EMBEDDING_PORT_MICROSERVICE: ${MM_EMBEDDING_PORT_MICROSERVICE}
+      MULTIMODAL_EMBEDDING: true
+    restart: unless-stopped
+  
+  retriever-redis:
+    image: ${REGISTRY:-opea}/retriever:${TAG:-latest}
+    container_name: retriever-redis
+    depends_on:
+      - redis-vector-db
+    ports:
+      - "${REDIS_RETRIEVER_PORT}:${REDIS_RETRIEVER_PORT}"
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_DB_PORT: ${REDIS_DB_PORT}
+      REDIS_INSIGHTS_PORT: ${REDIS_INSIGHTS_PORT}
+      REDIS_RETRIEVER_PORT: ${REDIS_RETRIEVER_PORT}
+      INDEX_NAME: ${INDEX_NAME}
+      BRIDGE_TOWER_EMBEDDING: ${BRIDGE_TOWER_EMBEDDING}
+      LOGFLAG: ${LOGFLAG}
+      RETRIEVER_COMPONENT_NAME: "OPEA_RETRIEVER_REDIS"
+    restart: unless-stopped
+
 networks:
   default:
     driver: bridge
