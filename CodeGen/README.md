@@ -170,6 +170,10 @@ Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build 
 
 Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
+Start CodeGen based on TGI service:
+
+Start CodeGen based on TGI service:
+
 ```bash
 cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
 ```

@@ -23,24 +23,12 @@ logger = CustomLogger("opea_dataprep_microservice")
 logflag = os.getenv("LOGFLAG", False)
 
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 7778))
-
 LLM_SERVICE_HOST_IP = os.getenv("LLM_SERVICE_HOST_IP", "0.0.0.0")
 LLM_SERVICE_PORT = int(os.getenv("LLM_SERVICE_PORT", 9000))
-
 RETRIEVAL_SERVICE_HOST_IP = os.getenv("RETRIEVAL_SERVICE_HOST_IP", "0.0.0.0")
 REDIS_RETRIEVER_PORT = int(os.getenv("REDIS_RETRIEVER_PORT", 7000))
-
 TEI_EMBEDDING_HOST_IP = os.getenv("TEI_EMBEDDING_HOST_IP", "0.0.0.0")
 EMBEDDER_PORT = int(os.getenv("EMBEDDER_PORT", 6000))
-
-print(">>>>>> LLM_SERVICE_HOST_IP:", LLM_SERVICE_HOST_IP)
-print(">>>>>> LLM_SERVICE_PORT:", LLM_SERVICE_PORT)
-
-print(">>>>>> RETRIEVAL_SERVICE_HOST_IP:", RETRIEVAL_SERVICE_HOST_IP)
-print(">>>>>> REDIS_RETRIEVER_PORT:", REDIS_RETRIEVER_PORT)
-
-print(">>>>>> TEI_EMBEDDING_HOST_IP:", TEI_EMBEDDING_HOST_IP)
-print(">>>>>> EMBEDDER_PORT:", EMBEDDER_PORT)
 
 grader_prompt = """You are a grader assessing relevance of a retrieved document to a user question. \n                     
 Here is the user question: {question} \n
