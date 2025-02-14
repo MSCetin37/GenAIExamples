@@ -3,89 +3,6 @@
 This document outlines the deployment process for a CodeGen application utilizing the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline on Intel Xeon server. The steps include Docker images creation, container deployment via Docker Compose, and service execution to integrate microservices such as `llm`. We will publish the Docker images to Docker Hub soon, further simplifying the deployment process for this service.
 The default pipeline deploys with vLLM as the LLM serving component. It also provides options of using TGI backend for LLM microservice.
 
-## 🚀 Create an AWS Xeon Instance
-
-To run the example on an AWS Xeon instance, start by creating an AWS account if you don't have one already. Then, get started with the [EC2 Console](https://console.aws.amazon.com/ec2/v2/home). AWS EC2 M7i, C7i, C7i-flex and M7i-flex instances are 4th Generation Intel Xeon Scalable processors suitable for the task.
-
-For detailed information about these instance types, you can refer to [m7i](https://aws.amazon.com/ec2/instance-types/m7i/). Once you've chosen the appropriate instance type, proceed with configuring your instance settings, including network configurations, security groups, and storage options.
-
-After launching your instance, you can connect to it using SSH (for Linux instances) or Remote Desktop Protocol (RDP) (for Windows instances). From there, you'll have full access to your Xeon server, allowing you to install, configure, and manage your applications as needed.
-
-## 🚀 Start Microservices and MegaService
-
-The CodeGen megaservice manages a several microservices including 'Embedding MicroService', 'Retrieval MicroService' and 'LLM MicroService' within a Directed Acyclic Graph (DAG). In the diagram below, the LLM microservice is a language model microservice that generates code snippets based on the user's input query. The TGI service serves as a text generation interface, providing a RESTful API for the LLM microservice. Data Preparation allows users to save/update documents or online resources to the vector database. Users can upload files or provide URLs, and manage their saved resources. The CodeGen Gateway acts as the entry point for the CodeGen application, invoking the Megaservice to generate code snippets in response to the user's input query.
-
-The mega flow of the CodeGen application, from user's input query to the application's output response, is as follows:
-
-```mermaid
----
-config:
-  flowchart:
-    nodeSpacing: 400
-    rankSpacing: 100
-    curve: linear
-  themeVariables:
-    fontSize: 25px
----
-flowchart LR
-    %% Colors %%
-    classDef blue fill:#ADD8E6,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
-    classDef orange fill:#FBAA60,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
-    classDef orchid fill:#C26DBC,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
-    classDef invisible fill:transparent,stroke:transparent;
-    style CodeGen-MegaService stroke:#000000
-    %% Subgraphs %%
-    subgraph CodeGen-MegaService["CodeGen-MegaService"]
-        direction LR
-        EM([Embedding<br>MicroService]):::blue
-        RET([Retrieval<br>MicroService]):::blue
-        RER([Agents]):::blue
-        LLM([LLM<br>MicroService]):::blue
-    end
-    subgraph User Interface
-        direction LR
-        a([Submit Query Tab]):::orchid
-        UI([UI server]):::orchid
-        Ingest([Manage Resources]):::orchid
-    end
-
-    CLIP_EM{{Embedding<br>service}}
-    VDB{{Vector DB}}
-    V_RET{{Retriever<br>service}}
-    Ingest{{Ingest data}}
-    DP([Data Preparation]):::blue
-    LLM_gen{{TGI Service}}
-    GW([CodeGen GateWay]):::orange
-
-    %% Data Preparation flow
-    %% Ingest data flow
-    direction LR
-    Ingest[Ingest data] --> UI
-    UI --> DP
-    DP <-.-> CLIP_EM
-
-    %% Questions interaction
-    direction LR
-    a[User Input Query] --> UI
-    UI --> GW
-    GW <==> CodeGen-MegaService
-    EM ==> RET
-    RET ==> RER
-    RER ==> LLM
-
-
-    %% Embedding service flow
-    direction LR
-    EM <-.-> CLIP_EM
-    RET <-.-> V_RET
-    LLM <-.-> LLM_gen
-
-    direction TB
-    %% Vector DB interaction
-    V_RET <-.->VDB
-    DP <-.->VDB
-```
-
 ### Setup Environment Variables
 
 Since the `compose.yaml` will consume some environment variables, you need to setup them in advance as below.
@@ -175,17 +92,12 @@ To access the frontend, open the following URL in your browser: `http://{host_ip
 
 ```yaml
   codegen-xeon-ui-server:
-    image: opea/codegen-ui:latest
+    image: opea/codegen-gradio-ui:latest
     ...
     ports:
       - "80:5173"
 ```
 
-![project-screenshot](../../../../assets/img/codeGen_ui_init.jpg)
-
-Here is an example of running CodeGen in the UI:
-
-![project-screenshot](../../../../assets/img/codeGen_ui_response.png)
 
 ## 🚀 Launch the React Based UI (Optional)
 
@@ -314,15 +226,15 @@ cd GenAIExamples/CodeGen/ui
 docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
 ```
 
-### 4. Build CodeGen React UI Docker Image (Optional)
+### 4. Build CodeGen Gradio UI Docker Image
 
-Build react frontend Docker image via below command:
+Build gradio frontend Docker image via below command:
 
 **Export the value of the public IP address of your Xeon server to the `host_ip` environment variable**
 
 ```bash
 cd GenAIExamples/CodeGen/ui
-docker build --no-cache -t opea/codegen-react-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.react .
+docker build --no-cache -t opea/codegen-gradio-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.gradio .
 ```
 
 Then run the command `docker images`, you will have the following Docker Images:
@@ -330,4 +242,4 @@ Then run the command `docker images`, you will have the following Docker Images:
 - `opea/llm-textgen:latest`
 - `opea/codegen:latest`
 - `opea/codegen-ui:latest`
-- `opea/codegen-react-ui:latest` (optional)
+- `opea/codegen-gradio-ui:latest`

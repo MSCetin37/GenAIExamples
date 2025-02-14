@@ -19,9 +19,6 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 
-logger = CustomLogger("opea_dataprep_microservice")
-logflag = os.getenv("LOGFLAG", False)
-
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 7778))
 
 LLM_SERVICE_HOST_IP = os.getenv("LLM_SERVICE_HOST_IP", "0.0.0.0")
@@ -83,7 +80,7 @@ def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **k
         embedding = inputs['data'][0]['embedding']
         # Align the inputs for the retriever service
         inputs = {
-            "index_name": llm_parameters_dict["index_name"],  
+            "index_name": llm_parameters_dict["key_index_name"],  
             "text": self.input_query,
             "embedding": embedding
         }
@@ -201,14 +198,14 @@ class CodeGenService:
             presence_penalty=chat_request.presence_penalty if chat_request.presence_penalty else 0.0,
             repetition_penalty=chat_request.repetition_penalty if chat_request.repetition_penalty else 1.03,
             stream=stream_opt,
-            index_name=chat_request.index_name
+            key_index_name=chat_request.key_index_name
         )
 
         # Initialize the initial inputs with the generated prompt
         initial_inputs = {"query": prompt}
 
         # Check if the key index name is provided in the parameters
-        if parameters.index_name:
+        if parameters.key_index_name:
             if agents_flag:
                 # Schedule the retriever microservice
                 result_ret, runtime_graph = await self.megaservice_retriever.schedule(
@@ -251,16 +248,11 @@ class CodeGenService:
                                         relevant_docs.append(doc)
                                     
                 # Update the initial inputs with the relevant documents
-                if len(relevant_docs)>0:
-                    logger.info(f"[ CodeGenService - handle_request ] {len(relevant_docs)} relevant document\s found.")
-                    query = initial_inputs["query"]
-                    initial_inputs = {}
-                    initial_inputs["retrieved_docs"] = relevant_docs
-                    initial_inputs["initial_query"] = query
-                    
-                else:
-                    logger.info("[ CodeGenService - handle_request ] Could not find any relevant documents. The query will be used as input to the LLM.")
-                    
+                query = initial_inputs["query"]
+                initial_inputs = {}
+                initial_inputs["retrieved_docs"] = relevant_docs
+                initial_inputs["initial_query"] = query
+                megaservice = self.megaservice_llm
             else:
                 # Use the combined retriever and LLM microservice
                 megaservice = self.megaservice_retriever_llm
