@@ -21,6 +21,9 @@ MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 7778))
 LLM_SERVICE_HOST_IP = os.getenv("LLM_SERVICE_HOST_IP", "0.0.0.0")
 LLM_SERVICE_PORT = int(os.getenv("LLM_SERVICE_PORT", 9000))
 
+RETRIEVAL_SERVICE_HOST_IP = os.getenv("RETRIEVAL_SERVICE_HOST_IP", "0.0.0.0")
+RETRIEVAL_SERVICE_PORT = int(os.getenv("LLM_SERVICE_PORT", 7000))
+
 
 class CodeGenService:
     def __init__(self, host="0.0.0.0", port=8000):
