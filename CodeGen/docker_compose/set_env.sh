@@ -2,9 +2,9 @@
 
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-# pushd "../../" > /dev/null
-# source .set_env.sh
-# popd > /dev/null
+pushd "../../" > /dev/null
+source .set_env.sh
+popd > /dev/null
 
 export your_ip=$(hostname -I | awk '{print $1}')
 
@@ -22,42 +22,21 @@ export no_proxy=${no_proxy},${host_ip}
 export http_proxy=${http_proxy}
 export https_proxy=${https_proxy}
 
-# export LLM_MODEL_ID="Qwen/Qwen2.5-Coder-7B-Instruct"
 export LLM_MODEL_ID="Qwen/Qwen2.5-Coder-32B-Instruct"
+export LLM_SERVICE_PORT=9000
+export LLM_ENDPOINT="http://${host_ip}:8028"
+export LLM_SERVICE_HOST_IP=${host_ip}
 export TGI_LLM_ENDPOINT="http://${host_ip}:8028"
 
 export MEGA_SERVICE_PORT=7778
 export MEGA_SERVICE_HOST_IP=${host_ip}
-export MEGA_SERVICE_PORT=7778
 export BACKEND_SERVICE_ENDPOINT="http://${host_ip}:7778/v1/codegen"
 
 export REDIS_DB_PORT=6379
 export REDIS_INSIGHTS_PORT=8001
 export REDIS_URL="redis://${host_ip}:${REDIS_DB_PORT}"
-export REDIS_HOST=${host_ip}
-export INDEX_NAME="test_codeGen_v1"
-
-
-export RETRIEVAL_SERVICE_HOST_IP=${host_ip}
-
-export EMBEDDING_MODEL_ID="BAAI/bge-base-en-v1.5"
-
-export MMEI_EMBEDDING_ENDPOINT="http://${host_ip}:$EMM_BRIDGETOWER_PORT"
-export MM_EMBEDDING_ENDPOINT="http://${host_ip}:$EMM_BRIDGETOWER_PORT"
-
-export MM_EMBEDDING_PORT_MICROSERVICE=6000
-export MM_EMBEDDING_SERVICE_HOST_IP=${host_ip}
-
-# export BRIDGE_TOWER_EMBEDDING=true
-
-# export MULTIMODAL_DATAPREP=true
-export DATAPREP_COMPONENT_NAME="OPEA_DATAPREP_REDIS"
-
 export REDIS_RETRIEVER_PORT=7000
-export DATAPREP_REDIS_PORT=6007
-export LOGFLAG=false
-
-# Text Retriever 
+export RETRIEVAL_SERVICE_HOST_IP=${host_ip}
 export RETRIEVER_COMPONENT_NAME="OPEA_RETRIEVER_REDIS"
 export INDEX_NAME="CodeGen"
 
@@ -69,8 +48,4 @@ export TEI_EMBEDDING_ENDPOINT="http://${host_ip}:${TEI_EMBEDDER_PORT}"
 
 export DATAPREP_REDIS_PORT=6007
 export LOGFLAG=false
-
-
-# export LLM_SERVICE_HOST_IP=${host_ip}
-# export RETRIEVAL_SERVICE_HOST_IP=${host_ip}
-# export TEI_EMBEDDING_HOST_IP=${host_ip}
+export MODEL_CACHE="./data"
