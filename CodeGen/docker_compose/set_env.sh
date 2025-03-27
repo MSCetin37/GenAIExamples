@@ -47,5 +47,6 @@ export TEI_EMBEDDING_HOST_IP=${host_ip}
 export TEI_EMBEDDING_ENDPOINT="http://${host_ip}:${TEI_EMBEDDER_PORT}"
 
 export DATAPREP_REDIS_PORT=6007
+export DATAPREP_ENDPOINT="http://${host_ip}:${DATAPREP_REDIS_PORT}/v1/dataprep"
 export LOGFLAG=false
 export MODEL_CACHE="./data"
