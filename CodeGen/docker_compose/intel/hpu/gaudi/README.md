@@ -6,28 +6,77 @@ The default pipeline deploys with vLLM as the LLM serving component. It also pro
 
 ## 🚀 Start MicroServices and MegaService
 
-The CodeGen megaservice manages a single microservice called LLM within a Directed Acyclic Graph (DAG). In the diagram above, the LLM microservice is a language model microservice that generates code snippets based on the user's input query. The TGI service serves as a text generation interface, providing a RESTful API for the LLM microservice. The CodeGen Gateway acts as the entry point for the CodeGen application, invoking the Megaservice to generate code snippets in response to the user's input query.
+The CodeGen megaservice manages a several microservices including 'Embedding MicroService', 'Retrieval MicroService' and 'LLM MicroService' within a Directed Acyclic Graph (DAG). In the diagram below, the LLM microservice is a language model microservice that generates code snippets based on the user's input query. The TGI service serves as a text generation interface, providing a RESTful API for the LLM microservice. Data Preparation allows users to save/update documents or online resources to the vector database. Users can upload files or provide URLs, and manage their saved resources. The CodeGen Gateway acts as the entry point for the CodeGen application, invoking the Megaservice to generate code snippets in response to the user's input query.
 
 The mega flow of the CodeGen application, from user's input query to the application's output response, is as follows:
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 400
+    rankSpacing: 100
+    curve: linear
+  themeVariables:
+    fontSize: 25px
+---
 flowchart LR
-    subgraph CodeGen
+    %% Colors %%
+    classDef blue fill:#ADD8E6,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
+    classDef orange fill:#FBAA60,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
+    classDef orchid fill:#C26DBC,stroke:#ADD8E6,stroke-width:2px,fill-opacity:0.5
+    classDef invisible fill:transparent,stroke:transparent;
+    style CodeGen-MegaService stroke:#000000
+    %% Subgraphs %%
+    subgraph CodeGen-MegaService["CodeGen-MegaService"]
         direction LR
-        A[User] --> |Input query| B[CodeGen Gateway]
-        B --> |Invoke| Megaservice
-        subgraph Megaservice["Megaservice"]
-            direction TB
-            C((LLM<br>9000)) -. Post .-> D{{TGI Service<br>8028}}
-        end
-        Megaservice --> |Output| E[Response]
+        EM([Embedding<br>MicroService]):::blue
+        RET([Retrieval<br>MicroService]):::blue
+        RER([Agents]):::blue
+        LLM([LLM<br>MicroService]):::blue
+    end
+    subgraph User Interface
+        direction LR
+        a([Submit Query Tab]):::orchid
+        UI([UI server]):::orchid
+        Ingest([Manage Resources]):::orchid
     end
 
-    subgraph Legend
-        direction LR
-        G([Microservice]) ==> H([Microservice])
-        I([Microservice]) -.-> J{{Server API}}
-    end
+    CLIP_EM{{Embedding<br>service}}
+    VDB{{Vector DB}}
+    V_RET{{Retriever<br>service}}
+    Ingest{{Ingest data}}
+    DP([Data Preparation]):::blue
+    LLM_gen{{TGI Service}}
+    GW([CodeGen GateWay]):::orange
+
+    %% Data Preparation flow
+    %% Ingest data flow
+    direction LR
+    Ingest[Ingest data] --> UI
+    UI --> DP
+    DP <-.-> CLIP_EM
+
+    %% Questions interaction
+    direction LR
+    a[User Input Query] --> UI
+    UI --> GW
+    GW <==> CodeGen-MegaService
+    EM ==> RET
+    RET ==> RER
+    RER ==> LLM
+
+
+    %% Embedding service flow
+    direction LR
+    EM <-.-> CLIP_EM
+    RET <-.-> V_RET
+    LLM <-.-> LLM_gen
+
+    direction TB
+    %% Vector DB interaction
+    V_RET <-.->VDB
+    DP <-.->VDB
 ```
 
 ### Setup Environment Variables
@@ -103,6 +152,15 @@ docker compose --profile codegen-gaudi-vllm up -d
         "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."
         }'
    ```
+
+    If the user wants a CodeGen service with RAG and Agents based on dedicated documentation.
+   
+    ```bash
+    curl http://localhost:7778/v1/codegen \
+      -H "Content-Type: application/json" \
+      -d '{"agents_flag": "True", "index_name": "my_API_document", "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
+    ```
+   
 
 ## 🚀 Launch the Svelte Based UI
 

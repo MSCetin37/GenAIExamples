@@ -58,7 +58,7 @@ flowchart LR
     V_RET{{Retriever<br>service}}
     Ingest{{Ingest data}}
     DP([Data Preparation]):::blue
-    LLM_gen{{LLM Service}}
+    LLM_gen{{TGI Service}}
     GW([CodeGen GateWay]):::orange
 
     %% Data Preparation flow
@@ -161,10 +161,24 @@ Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build 
 
 Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml).
 
+Start CodeGen based on TGI service:
+
 ```bash
-cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
-docker compose up -d
+cd GenAIExamples/CodeGen/docker_compose
+source set_env.sh
+cd intel/cpu/xeon
+docker compose --profile codegen-xeon-tgi up -d
 ```
+
+Start CodeGen based on vLLM service:
+
+```bash
+cd GenAIExamples/CodeGen/docker_compose
+source set_env.sh
+cd intel/cpu/xeon
+docker compose --profile codegen-xeon-vllm up -d
+```
+
 
 Refer to the [Xeon Guide](./docker_compose/intel/cpu/xeon/README.md) for more instructions on building docker images from source.
 
