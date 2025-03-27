@@ -13,21 +13,21 @@ cd GenAIExamples/CodeGen/ui
 docker build -t opea/codegen-gradio-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f docker/Dockerfile.gradio .
 ```
 
-This command builds the Docker image with the tag `opea/docsum-ui:latest`. It also passes the proxy settings as build arguments to ensure that the build process can access the internet if you are behind a corporate firewall.
+This command builds the Docker image with the tag `opea/codegen-gradio-ui:latest`. It also passes the proxy settings as build arguments to ensure that the build process can access the internet if you are behind a corporate firewall.
 
 ### Run UI Docker Image
 
-To run the frontend Docker image, navigate to the `GenAIExamples/DocSum/ui/docker` directory and execute the following commands:
+To run the frontend Docker image, navigate to the `GenAIExamples/CodeGen/ui/gradio` directory and execute the following commands:
 
 ```bash
-cd GenAIExamples/CodeGen/ui/docker
+cd GenAIExamples/CodeGen/ui/gradio
 
 ip_address=$(hostname -I | awk '{print $1}')
 docker run -d -p 5173:5173 --ipc=host \
    -e http_proxy=$http_proxy \
    -e https_proxy=$https_proxy \
    -e no_proxy=$no_proxy \
-   -e BACKEND_SERVICE_ENDPOINT=http://$ip_address:8888/v1/docsum \
+   -e BACKEND_SERVICE_ENDPOINT=http://$ip_address:7778/v1/codegen \
    opea/codegen-gradio-ui:latest
 ```
 
@@ -35,7 +35,7 @@ This command runs the Docker container in interactive mode, mapping port 5173 of
 
 ### Python
 
-To run the frontend application directly using Python, navigate to the `GenAIExamples/DocSum/ui/gradio` directory and run the following command:
+To run the frontend application directly using Python, navigate to the `GenAIExamples/CodeGen/ui/gradio` directory and run the following command:
 
 ```bash
 cd GenAIExamples/CodeGen/ui/gradio
@@ -43,17 +43,6 @@ python codegen_ui_gradio.py
 ```
 
 This command starts the frontend application using Python.
-
-## 📸 Project Screenshots
-
-![project-screenshot](../../assets/img/docSum_ui_gradio_text.png)
-
-### 🧐 Features
-
-Here are some of the project's features:
-
-- Summarizing Uploaded Files: Users can upload files from their local device. Once a file is uploaded, the summarization of the document will start automatically. The summary will be displayed in the 'Summary' box.
-- Summarizing Text via Pasting: Users can paste the text to be summarized into the text box. By clicking the 'Generate Summary' button, a condensed summary of the content will be produced and displayed in the 'Summary' box on the right.
 
 ## Additional Information
 
