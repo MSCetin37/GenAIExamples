@@ -9,7 +9,6 @@ import argparse
 import os
 from pathlib import Path
 import gradio as gr
-from gradio_pdf import PDF
 import requests
 import pandas as pd
 import os
@@ -81,11 +80,23 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
             if is_valid_url(file):
                 print(file, " is valid URL")
                 print("Ingesting URL...")
+                yield (
+                    gr.Textbox(
+                        visible=True,
+                        value="Ingesting URL...",
+                    )
+                )
                 value = ingest_url(file, index, chunk_size, chunk_overlap)
                 requests.append(value)
                 yield value
             elif file_ext in ['.pdf', '.txt']:
                 print("Ingesting File...")
+                yield (
+                    gr.Textbox(
+                        visible=True,
+                        value="Ingesting file...",
+                    )
+                )
                 value = ingest_file(file, index, chunk_size, chunk_overlap)
                 requests.append(value)
                 yield value
@@ -94,7 +105,7 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
                 yield (
                     gr.Textbox(
                         visible=True,
-                        value="Your file extension type is not supported.",
+                        value="Your media is either an invalid URL or the file extension type is not supported. (Supports .pdf, .txt, url)",
                     )
                 )
                 return
@@ -173,14 +184,8 @@ def ingest_url(url, index=None, chunk_size=100, chunk_overlap=150):
     print("URL is ", url)
     url = str(url)
     if not is_valid_url(url):
-        print("Invalid URL")
-        # yield (
-        #     gr.Textbox(
-        #         visible=True,
-        #         value="Invalid URL entered. Please enter a valid URL",
-        #     )
-        # )
-        return
+        return "Invalid URL entered. Please enter a valid URL"
+    
     headers = {
          # "Content-Type: multipart/form-data"
         }
@@ -249,7 +254,7 @@ def update_table(index=None):
     
 def update_indices():
     indices = get_indices()
-    df = pd.DataFrame(indices, columns=["File Databases"])
+    df = pd.DataFrame(indices, columns=["File Indices"])
     return df
 
 def delete_file(file, index=None):
@@ -276,20 +281,21 @@ def delete_all_files(index=None):
     print("Delete all files ", response)
     table = update_table()
     
-    return response.text
+    return "Delete All status: " + response.text
 
 def get_indices():
     headers = {
         # "Content-Type: application/json"
     }
+    print("URL IS ", dataprep_get_indices_endpoint)
     response = requests.post(url=dataprep_get_indices_endpoint, headers=headers)
+    indices = ["None"]
     print("Get Indices", response)
-    indices = response.json()
+    indices += response.json()
     return indices
 
 def update_indices_dropdown():
-    indices = ["None"] + get_indices()
-    new_dd = gr.update(choices=indices, value="None")
+    new_dd = gr.update(choices=get_indices(), value="None")
     return new_dd
     
 
@@ -311,13 +317,14 @@ with gr.Blocks() as ui:
         chatbot = gr.Chatbot(label="Chat History")
         prompt_input = gr.Textbox(label="Enter your query")
         with gr.Column():
-            with gr.Row(scale=8):
+            with gr.Row(equal_height=True):
                 # indices = ["None"] + get_indices()
-                database_dropdown = gr.Dropdown(choices=get_indices(), label="Select Index", value="None")
-            with gr.Row(scale=1):
-                db_refresh_button = gr.Button("Refresh", variant="primary")
+                database_dropdown = gr.Dropdown(choices=get_indices(), label="Select Index", value="None", scale=10)
+                db_refresh_button = gr.Button("Refresh Dropdown", scale=0.1)
                 db_refresh_button.click(update_indices_dropdown, outputs=database_dropdown)
                 use_agent = gr.Checkbox(label="Use Agent", container=False)
+            # with gr.Row(scale=1):
+            
         
         generate_button = gr.Button("Generate Code")
 

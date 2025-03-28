@@ -6,7 +6,7 @@ This project provides a user interface for summarizing documents and text using 
 
 ### Build UI Docker Image
 
-To build the frontend Docker image, navigate to the `GenAIExamples/DocSum/ui` directory and run the following command:
+To build the frontend Docker image, navigate to the `GenAIExamples/CodeGen/ui` directory and run the following command:
 
 ```bash
 cd GenAIExamples/CodeGen/ui

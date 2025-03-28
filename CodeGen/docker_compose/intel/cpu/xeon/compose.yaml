@@ -111,6 +111,7 @@ services:
       - MEGA_SERVICE_PORT=${MEGA_SERVICE_PORT}
       - host_ip=${host_ip}
       - DATAPREP_ENDPOINT=${DATAPREP_ENDPOINT}
+      - DATAPREP_REDIS_PORT=${DATAPREP_REDIS_PORT}
     ipc: host
     restart: always
   redis-vector-db:
