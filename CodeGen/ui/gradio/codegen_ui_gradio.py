@@ -9,7 +9,6 @@ import argparse
 import os
 from pathlib import Path
 import gradio as gr
-from gradio_pdf import PDF
 import requests
 import pandas as pd
 import os
