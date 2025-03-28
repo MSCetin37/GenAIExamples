@@ -219,7 +219,7 @@ function main() {
         stop_docker "${docker_compose_profiles[${i}]}"
     done
 
-    # # build docker images
+    # build docker images
     if [[ "$IMAGE_REPO" == "opea" ]]; then build_docker_images; fi
 
     # loop all profiles
