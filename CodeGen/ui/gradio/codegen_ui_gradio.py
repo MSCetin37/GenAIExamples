@@ -147,17 +147,19 @@ def generate_code(query, index=None, use_agent=False):
             line = line.decode('utf-8')
             if line.startswith("data: "):  # Only process lines starting with "data: "
                 json_part = line[len("data: "):]  # Remove the "data: " prefix
-                if json_part.strip() == "[DONE]":  # Ignore the DONE marker
-                    continue
-                try:
-                    json_obj = json.loads(json_part)  # Convert to dictionary
-                    if "choices" in json_obj:
-                        for choice in json_obj["choices"]:
-                            if "text" in choice:
-                                # Yield each token individually
-                                yield choice["text"]
-                except json.JSONDecodeError:
-                    print("Error parsing JSON:", json_part)
+            else:
+                json_part = line
+            if json_part.strip() == "[DONE]":  # Ignore the DONE marker
+                continue
+            try:
+                json_obj = json.loads(json_part)  # Convert to dictionary
+                if "choices" in json_obj:
+                    for choice in json_obj["choices"]:
+                        if "text" in choice:
+                            # Yield each token individually
+                            yield choice["text"]
+            except json.JSONDecodeError:
+                print("Error parsing JSON:", json_part)
 
 
 def ingest_file(file, index=None, chunk_size=100, chunk_overlap=150):
