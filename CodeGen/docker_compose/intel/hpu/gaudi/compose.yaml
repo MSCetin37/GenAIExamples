@@ -112,12 +112,11 @@ services:
       - REDIS_RETRIEVER_PORT=${REDIS_RETRIEVER_PORT}
       - TEI_EMBEDDING_HOST_IP=${TEI_EMBEDDING_HOST_IP}
       - EMBEDDER_PORT=${EMBEDDER_PORT}
-      - host_ip=${host_ip}
     ipc: host
     restart: always
-  codegen-gaudi-ui-server:
+  codegen-xeon-ui-server:
     image: ${REGISTRY:-opea}/codegen-gradio-ui:${TAG:-latest}
-    container_name: codegen-gaudi-ui-server
+    container_name: codegen-xeon-ui-server
     depends_on:
       - codegen-gaudi-backend-server
     ports:
@@ -155,6 +154,42 @@ services:
       INDEX_NAME: ${INDEX_NAME}
       HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
       LOGFLAG: true
+    restart: unless-stopped
+  tei-embedding-serving:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: tei-embedding-serving
+    entrypoint: /bin/sh -c "apt-get update && apt-get install -y curl && text-embeddings-router --json-output --model-id ${EMBEDDING_MODEL_ID} --auto-truncate"
+    ports:
+      - "${TEI_EMBEDDER_PORT:-12000}:80"
+    volumes:
+      - "./data:/data"
+    shm_size: 1g
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      host_ip: ${host_ip}
+      HF_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://${host_ip}:${TEI_EMBEDDER_PORT}/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 48
+  tei-embedding-server:
+    image: ${REGISTRY:-opea}/embedding:${TAG:-latest}
+    container_name: tei-embedding-server
+    ports:
+      - "${EMBEDDER_PORT:-10201}:6000"
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      TEI_EMBEDDING_ENDPOINT: ${TEI_EMBEDDING_ENDPOINT}
+      EMBEDDING_COMPONENT_NAME: "OPEA_TEI_EMBEDDING"
+    depends_on:
+      tei-embedding-serving:
+        condition: service_healthy
     restart: unless-stopped
   retriever-redis:
     image: ${REGISTRY:-opea}/retriever:${TAG:-latest}
