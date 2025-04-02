@@ -140,9 +140,11 @@ def generate_code(query, index=None, use_agent=False):
     print("Query is ", input_dict)
     headers = {"Content-Type": "application/json"}
     
-    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)
+    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)        
 
+    line_count = 0
     for line in response.iter_lines():
+        line_count += 1
         if line:
             line = line.decode('utf-8')
             if line.startswith("data: "):  # Only process lines starting with "data: "
@@ -160,6 +162,10 @@ def generate_code(query, index=None, use_agent=False):
                             yield choice["text"]
             except json.JSONDecodeError:
                 print("Error parsing JSON:", json_part)
+    
+    if line_count == 0:
+        yield f"Something went wrong, No Response Generated! \nIf you are using an Index, try uploading your media again with a smaller chunk size to avoid exceeding the token max. \
+        \nOr, check the Use Agent box and try again."
 
 
 def ingest_file(file, index=None, chunk_size=100, chunk_overlap=150):
@@ -289,7 +295,6 @@ def get_indices():
     headers = {
         # "Content-Type: application/json"
     }
-    print("URL IS ", dataprep_get_indices_endpoint)
     response = requests.post(url=dataprep_get_indices_endpoint, headers=headers)
     indices = ["None"]
     print("Get Indices", response)
