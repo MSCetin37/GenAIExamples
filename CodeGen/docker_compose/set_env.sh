@@ -50,4 +50,3 @@ export DATAPREP_REDIS_PORT=6007
 export DATAPREP_ENDPOINT="http://${host_ip}:${DATAPREP_REDIS_PORT}/v1/dataprep"
 export LOGFLAG=false
 export MODEL_CACHE="./data"
-export NUM_CARDS=1

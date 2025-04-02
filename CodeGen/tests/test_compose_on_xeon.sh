@@ -30,7 +30,6 @@ function build_docker_images() {
 
     cd $WORKPATH/docker_image_build
     # git clone --depth 1 --branch ${opea_branch} https://github.com/opea-project/GenAIComps.git
-    git clone --depth 1 --branch codegen_rag_agent_v2 https://github.com/MSCetin37/GenAIComps.git
 
     git clone https://github.com/vllm-project/vllm.git && cd vllm
     VLLM_VER="$(git describe --tags "$(git rev-list --tags --max-count=1)" )"
