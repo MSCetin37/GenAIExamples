@@ -330,4 +330,6 @@ Then run the command `docker images`, you will have the following Docker Images:
 - `opea/llm-textgen:latest`
 - `opea/codegen:latest`
 - `opea/codegen-ui:latest`
+- `opea/codegen-gradio-ui:latest`
 - `opea/codegen-react-ui:latest` (optional)
+

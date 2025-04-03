@@ -112,11 +112,12 @@ services:
       - REDIS_RETRIEVER_PORT=${REDIS_RETRIEVER_PORT}
       - TEI_EMBEDDING_HOST_IP=${TEI_EMBEDDING_HOST_IP}
       - EMBEDDER_PORT=${EMBEDDER_PORT}
+      - host_ip=${host_ip}
     ipc: host
     restart: always
-  codegen-xeon-ui-server:
+  codegen-gaudi-ui-server:
     image: ${REGISTRY:-opea}/codegen-gradio-ui:${TAG:-latest}
-    container_name: codegen-xeon-ui-server
+    container_name: codegen-gaudi-ui-server
     depends_on:
       - codegen-gaudi-backend-server
     ports:
@@ -132,7 +133,6 @@ services:
       - DATAPREP_REDIS_PORT=${DATAPREP_REDIS_PORT}
     ipc: host
     restart: always
-
   redis-vector-db:
     image: redis/redis-stack:7.2.0-v9
     container_name: redis-vector-db
@@ -214,7 +214,6 @@ services:
       LOGFLAG: ${LOGFLAG}
       RETRIEVER_COMPONENT_NAME: ${RETRIEVER_COMPONENT_NAME:-OPEA_RETRIEVER_REDIS}
     restart: unless-stopped
-
 networks:
   default:
     driver: bridge

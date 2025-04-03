@@ -80,11 +80,23 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
             if is_valid_url(file):
                 print(file, " is valid URL")
                 print("Ingesting URL...")
+                yield (
+                    gr.Textbox(
+                        visible=True,
+                        value="Ingesting URL...",
+                    )
+                )
                 value = ingest_url(file, index, chunk_size, chunk_overlap)
                 requests.append(value)
                 yield value
             elif file_ext in ['.pdf', '.txt']:
                 print("Ingesting File...")
+                yield (
+                    gr.Textbox(
+                        visible=True,
+                        value="Ingesting file...",
+                    )
+                )
                 value = ingest_file(file, index, chunk_size, chunk_overlap)
                 requests.append(value)
                 yield value
@@ -93,7 +105,7 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
                 yield (
                     gr.Textbox(
                         visible=True,
-                        value="Your file extension type is not supported.",
+                        value="Your media is either an invalid URL or the file extension type is not supported. (Supports .pdf, .txt, url)",
                     )
                 )
                 return
@@ -128,24 +140,32 @@ def generate_code(query, index=None, use_agent=False):
     print("Query is ", input_dict)
     headers = {"Content-Type": "application/json"}
     
-    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)
+    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)        
 
+    line_count = 0
     for line in response.iter_lines():
+        line_count += 1
         if line:
             line = line.decode('utf-8')
             if line.startswith("data: "):  # Only process lines starting with "data: "
                 json_part = line[len("data: "):]  # Remove the "data: " prefix
-                if json_part.strip() == "[DONE]":  # Ignore the DONE marker
-                    continue
-                try:
-                    json_obj = json.loads(json_part)  # Convert to dictionary
-                    if "choices" in json_obj:
-                        for choice in json_obj["choices"]:
-                            if "text" in choice:
-                                # Yield each token individually
-                                yield choice["text"]
-                except json.JSONDecodeError:
-                    print("Error parsing JSON:", json_part)
+            else:
+                json_part = line
+            if json_part.strip() == "[DONE]":  # Ignore the DONE marker
+                continue
+            try:
+                json_obj = json.loads(json_part)  # Convert to dictionary
+                if "choices" in json_obj:
+                    for choice in json_obj["choices"]:
+                        if "text" in choice:
+                            # Yield each token individually
+                            yield choice["text"]
+            except json.JSONDecodeError:
+                print("Error parsing JSON:", json_part)
+    
+    if line_count == 0:
+        yield f"Something went wrong, No Response Generated! \nIf you are using an Index, try uploading your media again with a smaller chunk size to avoid exceeding the token max. \
+        \nOr, check the Use Agent box and try again."
 
 
 def ingest_file(file, index=None, chunk_size=100, chunk_overlap=150):
@@ -172,14 +192,8 @@ def ingest_url(url, index=None, chunk_size=100, chunk_overlap=150):
     print("URL is ", url)
     url = str(url)
     if not is_valid_url(url):
-        print("Invalid URL")
-        # yield (
-        #     gr.Textbox(
-        #         visible=True,
-        #         value="Invalid URL entered. Please enter a valid URL",
-        #     )
-        # )
-        return
+        return "Invalid URL entered. Please enter a valid URL"
+    
     headers = {
          # "Content-Type: multipart/form-data"
         }
@@ -248,7 +262,7 @@ def update_table(index=None):
     
 def update_indices():
     indices = get_indices()
-    df = pd.DataFrame(indices, columns=["File Databases"])
+    df = pd.DataFrame(indices, columns=["File Indices"])
     return df
 
 def delete_file(file, index=None):
@@ -275,20 +289,20 @@ def delete_all_files(index=None):
     print("Delete all files ", response)
     table = update_table()
     
-    return response.text
+    return "Delete All status: " + response.text
 
 def get_indices():
     headers = {
         # "Content-Type: application/json"
     }
     response = requests.post(url=dataprep_get_indices_endpoint, headers=headers)
+    indices = ["None"]
     print("Get Indices", response)
-    indices = response.json()
+    indices += response.json()
     return indices
 
 def update_indices_dropdown():
-    indices = ["None"] + get_indices()
-    new_dd = gr.update(choices=indices, value="None")
+    new_dd = gr.update(choices=get_indices(), value="None")
     return new_dd
     
 
@@ -310,13 +324,14 @@ with gr.Blocks() as ui:
         chatbot = gr.Chatbot(label="Chat History")
         prompt_input = gr.Textbox(label="Enter your query")
         with gr.Column():
-            with gr.Row(scale=8):
+            with gr.Row(equal_height=True):
                 # indices = ["None"] + get_indices()
-                database_dropdown = gr.Dropdown(choices=get_indices(), label="Select Index", value="None")
-            with gr.Row(scale=1):
-                db_refresh_button = gr.Button("Refresh", variant="primary")
+                database_dropdown = gr.Dropdown(choices=get_indices(), label="Select Index", value="None", scale=10)
+                db_refresh_button = gr.Button("Refresh Dropdown", scale=0.1)
                 db_refresh_button.click(update_indices_dropdown, outputs=database_dropdown)
                 use_agent = gr.Checkbox(label="Use Agent", container=False)
+            # with gr.Row(scale=1):
+            
         
         generate_button = gr.Button("Generate Code")
 
