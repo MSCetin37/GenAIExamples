@@ -114,7 +114,7 @@ services:
       - EMBEDDER_PORT=${EMBEDDER_PORT}
     ipc: host
     restart: always
-  codegen-xeon-ui-server:
+  codegen-gaudi-ui-server:
     image: ${REGISTRY:-opea}/codegen-gradio-ui:${TAG:-latest}
     container_name: codegen-xeon-ui-server
     depends_on:
