@@ -93,7 +93,6 @@ function validate_services() {
         fi
 
     else
-
         local HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST -d "$INPUT_DATA" -H 'Content-Type: application/json' "$URL")
         if [ "$HTTP_STATUS" -eq 200 ]; then
             echo "[ $SERVICE_NAME ] HTTP status is 200. Checking content..."
@@ -241,3 +240,4 @@ function main() {
 }
 
 main
+
