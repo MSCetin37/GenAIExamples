@@ -235,8 +235,8 @@ docker compose --profile codegen-xeon-vllm up -d
       curl http://${host_ip}:6007/v1/dataprep/ingest \
      -X POST \
      -H "Content-Type: multipart/form-data" \
-     -F "files=@./file2.pdf" \
-     -F "files=@./Shuttle73124.pdf" \ 
+     -F "files=@./file1.pdf" \
+     -F "files=@./file2.txt" \ 
      -F "index_name=my_API_document"
       ```
 
