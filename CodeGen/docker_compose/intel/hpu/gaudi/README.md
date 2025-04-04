@@ -177,25 +177,42 @@ Then run the command `docker images`, you will have the following Docker images:
 - `opea/codegen-react-ui:latest` (Optional)
 
 ### Start the Docker Containers for All Services
+#### Deploy CodeGen on Gaudi
 
-CodeGen support TGI service and vLLM service, you can choose start either one of them.
-
-Start CodeGen based on TGI service:
+Find the corresponding [compose.yaml](./docker_compose/intel/hpu/gaudi/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
 ```bash
-cd GenAIExamples/CodeGen/docker_compose
-source set_env.sh
-cd intel/hpu/gaudi
+cd GenAIExamples/CodeGen/docker_compose/intel/hpu/gaudi
+```
+
+TGI service:
+```bash
 docker compose --profile codegen-gaudi-tgi up -d
 ```
 
-Start CodeGen based on vLLM service:
+vLLM service:
+```bash
+docker compose --profile codegen-gaudi-vllm up -d
+```
+
+Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build docker images from source.
+
+#### Deploy CodeGen on Xeon
+
+Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
 ```bash
-cd GenAIExamples/CodeGen/docker_compose
-source set_env.sh
-cd intel/hpu/gaudi
-docker compose --profile codegen-gaudi-vllm up -d
+cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
+```
+
+TGI service:
+```bash
+docker compose --profile codegen-xeon-tgi up -d
+```
+
+vLLM service:
+```bash
+docker compose --profile codegen-xeon-vllm up -d
 ```
 
 ### Validate the MicroServices and MegaService
