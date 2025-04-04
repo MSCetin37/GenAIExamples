@@ -251,7 +251,7 @@ docker compose --profile codegen-xeon-vllm up -d
     CodeGen service with RAG and Agents activated based on an index.
    
     ```bash
-    curl http://${host_ip}$:7778/v1/codegen \
+    curl http://${host_ip}:7778/v1/codegen \
       -H "Content-Type: application/json" \
       -d '{"agents_flag": "True", "index_name": "my_API_document", "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
     ```
