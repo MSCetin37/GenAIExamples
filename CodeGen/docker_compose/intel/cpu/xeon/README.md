@@ -302,7 +302,7 @@ To construct the Mega Service, we utilize the [GenAIComps](https://github.com/op
 ```bash
 git clone https://github.com/opea-project/GenAIExamples
 cd GenAIExamples/CodeGen
-docker build -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
+docker build --no-cache -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
 ```
 
 ### 3. Build the UI Docker Image
@@ -311,7 +311,7 @@ Build the frontend Docker image via the command below:
 
 ```bash
 cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
+docker build --no-cache -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
 ```
 
 ### 4. Build CodeGen React UI Docker Image (Optional)
