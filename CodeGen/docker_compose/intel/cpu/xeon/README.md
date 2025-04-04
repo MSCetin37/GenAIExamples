@@ -100,15 +100,89 @@ export host_ip=${your_ip_address}
 export HUGGINGFACEHUB_API_TOKEN=you_huggingface_token
 ```
 
-2. Set Netowork Proxy
+2. Set Network Proxy
 
 **If you access public network through proxy, set the network proxy, otherwise, skip this step**
 
 ```bash
-export no_proxy=${your_no_proxy}
+export no_proxy=${no_proxy},${host_ip}
 export http_proxy=${your_http_proxy}
 export https_proxy=${your_https_proxy}
 ```
+
+## 🚀 Build Docker Images
+
+Should the Docker image you seek not yet be available on Docker Hub, you can build the Docker image locally.
+
+### 1. Build the LLM Docker Image
+
+```bash
+git clone https://github.com/opea-project/GenAIComps.git
+cd GenAIComps
+docker build -t opea/llm-textgen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/llms/src/text-generation/Dockerfile .
+```
+
+### 2. Build the Retriever Image
+
+```bash
+docker build -t opea/retriever:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/retrievers/src/Dockerfile .
+```
+
+### 3. Build the Dataprep Image
+
+```bash
+docker build -t opea/dataprep:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/src/Dockerfile .
+```
+
+### 4. Build the MegaService Docker Image
+
+To construct the Mega Service, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `codegen.py` Python script. Build the MegaService Docker image via the command below:
+
+```bash
+git clone https://github.com/opea-project/GenAIExamples
+cd GenAIExamples/CodeGen
+docker build -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
+```
+
+### 5. Build the UI Gradio Image (Recommended)
+
+Build the frontend Gradio image via the command below:
+
+```bash
+cd GenAIExamples/CodeGen/ui
+docker build -t opea/codegen-gradio-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f docker/Dockerfile.gradio .
+```
+
+### 5a. Build CodeGen React UI Docker Image (Optional)
+
+Build react frontend Docker image via below command:
+
+**Export the value of the public IP address of your Xeon server to the `host_ip` environment variable**
+
+```bash
+cd GenAIExamples/CodeGen/ui
+docker build --no-cache -t opea/codegen-react-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.react .
+```
+
+### 5b. Build the UI Docker Image
+
+Construct the frontend Docker image via the command below:
+
+```bash
+cd GenAIExamples/CodeGen/ui
+docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
+```
+
+Then run the command `docker images`, you will have the following Docker images:
+
+- `opea/llm-textgen:latest`
+- `opea/retriever:latest`
+- `opea/dataprep:latest`
+- `opea/codegen:latest`
+- `opea/codegen-gradio-ui:latest` (Recommended)
+- `opea/codegen-ui:latest` (Optional)
+- `opea/codegen-react-ui:latest` (Optional)
+
 
 ### Start the Docker Containers for All Services
 
@@ -139,8 +213,9 @@ docker compose --profile codegen-xeon-vllm up -d
    ```bash
    curl http://${host_ip}:8028/v1/chat/completions \
        -X POST \
-       -d '{"model": "Qwen/Qwen2.5-Coder-7B-Instruct", "messages": [{"role": "user", "content": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}], "max_tokens":32}' \
-       -H 'Content-Type: application/json'
+       -H 'Content-Type: application/json' \
+       -d '{"model": "Qwen/Qwen2.5-Coder-7B-Instruct", "messages": [{"role": "user", "content": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}], "max_tokens":32}'
+
    ```
 
 2. LLM Microservices
@@ -148,28 +223,59 @@ docker compose --profile codegen-xeon-vllm up -d
    ```bash
    curl http://${host_ip}:9000/v1/chat/completions\
      -X POST \
-     -d '{"query":"Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception.","max_tokens":256,"top_k":10,"top_p":0.95,"typical_p":0.95,"temperature":0.01,"repetition_penalty":1.03,"stream":true}' \
-     -H 'Content-Type: application/json'
+     -H 'Content-Type: application/json' \
+     -d '{"query":"Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception.","max_tokens":256,"top_k":10,"top_p":0.95,"typical_p":0.95,"temperature":0.01,"repetition_penalty":1.03,"stream":true}'
    ```
 
-3. MegaService
+3. Dataprep Microservice
+
+    Make sure to replace the file name placeholders with your correct file name
+
+      ```bash
+      curl http://${host_ip}:6007/v1/dataprep/ingest \
+     -X POST \
+     -H "Content-Type: multipart/form-data" \
+     -F "files=@./file2.pdf" \
+     -F "files=@./Shuttle73124.pdf" \ 
+     -F "index_name=my_API_document"
+      ```
+
+4. MegaService
 
    ```bash
-   curl http://${host_ip}:7778/v1/codegen -H "Content-Type: application/json" -d '{
-        "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."
-        }'
+   curl http://${host_ip}:7778/v1/codegen \
+     -H "Content-Type: application/json" \
+     -d '{"messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
    ```
 
-    If the user wants a CodeGen service with RAG and Agents based on dedicated documentation.
+    CodeGen service with RAG and Agents activated based on an index.
    
     ```bash
-    curl http://localhost:7778/v1/codegen \
+    curl http://${host_ip}$:7778/v1/codegen \
       -H "Content-Type: application/json" \
       -d '{"agents_flag": "True", "index_name": "my_API_document", "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
     ```
    
 
-## 🚀 Launch the UI
+## 🚀 Launch the Gradio Based UI (Recommended)
+To access the Gradio frontend URL, follow the steps in [this README](../../../../ui/gradio/README.md)
+
+Code Generation Tab
+![project-screenshot](../../../../assets/img/codegen_gradio_ui_main.png)
+
+Resource Management Tab
+![project-screenshot](../../../../assets/img/codegen_gradio_ui_main.png)
+
+Uploading a Knowledge Index
+
+![project-screenshot](../../../../assets/img/codegen_gradio_ui_dataprep.png)
+
+Here is an example of running a query in the Gradio UI using an Index:
+
+![project-screenshot](../../../../assets/img/codegen_gradio_ui_query.png)
+
+
+## 🚀 Launch the Svelte Based UI (Optional)
 
 To access the frontend, open the following URL in your browser: `http://{host_ip}:5173`. By default, the UI runs on port 5173 internally. If you prefer to use a different host port to access the frontend, you can modify the port mapping in the `compose.yaml` file as shown below:
 
@@ -282,54 +388,3 @@ For example:
 - Ask question and get answer
 
 ![qna](../../../../assets/img/codegen_qna.png)
-
-## 🚀 Download or Build Docker Images
-
-Should the Docker image you seek not yet be available on Docker Hub, you can build the Docker image locally.
-
-### 1. Build the LLM Docker Image
-
-```bash
-git clone https://github.com/opea-project/GenAIComps.git
-cd GenAIComps
-docker build -t opea/llm-textgen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/llms/src/text-generation/Dockerfile .
-```
-
-### 2. Build the MegaService Docker Image
-
-To construct the Mega Service, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `codegen.py` Python script. Build MegaService Docker image via the command below:
-
-```bash
-git clone https://github.com/opea-project/GenAIExamples
-cd GenAIExamples/CodeGen
-docker build -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
-```
-
-### 3. Build the UI Docker Image
-
-Build the frontend Docker image via the command below:
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
-```
-
-### 4. Build CodeGen React UI Docker Image (Optional)
-
-Build react frontend Docker image via below command:
-
-**Export the value of the public IP address of your Xeon server to the `host_ip` environment variable**
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build --no-cache -t opea/codegen-react-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.react .
-```
-
-Then run the command `docker images`, you will have the following Docker Images:
-
-- `opea/llm-textgen:latest`
-- `opea/codegen:latest`
-- `opea/codegen-ui:latest`
-- `opea/codegen-gradio-ui:latest`
-- `opea/codegen-react-ui:latest` (optional)
-
