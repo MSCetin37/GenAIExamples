@@ -20,7 +20,6 @@ The workflow falls into the following architecture:
 
 The CodeGen example is implemented using the component-level microservices defined in [GenAIComps](https://github.com/opea-project/GenAIComps). The flow chart below shows the information flow between different microservices for this example.
 
-
 ```mermaid
 ---
 config:
@@ -155,11 +154,13 @@ cd GenAIExamples/CodeGen/docker_compose/intel/hpu/gaudi
 ```
 
 TGI service:
+
 ```bash
 docker compose --profile codegen-xeon-tgi up -d
 ```
 
 vLLM service:
+
 ```bash
 docker compose --profile codegen-xeon-vllm up -d
 ```
@@ -175,15 +176,16 @@ cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
 ```
 
 TGI service:
+
 ```bash
 docker compose --profile codegen-xeon-tgi up -d
 ```
 
 vLLM service:
+
 ```bash
 docker compose --profile codegen-xeon-vllm up -d
 ```
-
 
 Refer to the [Xeon Guide](./docker_compose/intel/cpu/xeon/README.md) for more instructions on building docker images from source.
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 services:
 
   tgi-service:
@@ -132,7 +135,7 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       REDIS_URL: ${REDIS_URL}
-      REDIS_HOST: ${host_ip} 
+      REDIS_HOST: ${host_ip}
       INDEX_NAME: ${INDEX_NAME}
       HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
       LOGFLAG: true

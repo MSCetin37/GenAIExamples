@@ -1,11 +1,11 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import ast
 import asyncio
 import os
-import ast
 
-from comps import MegaServiceEndpoint, MicroService, ServiceOrchestrator, ServiceRoleType, ServiceType, CustomLogger
+from comps import CustomLogger, MegaServiceEndpoint, MicroService, ServiceOrchestrator, ServiceRoleType, ServiceType
 from comps.cores.mega.utils import handle_message
 from comps.cores.proto.api_protocol import (
     ChatCompletionRequest,
@@ -30,21 +30,21 @@ REDIS_RETRIEVER_PORT = int(os.getenv("REDIS_RETRIEVER_PORT", 7000))
 TEI_EMBEDDING_HOST_IP = os.getenv("TEI_EMBEDDING_HOST_IP", "0.0.0.0")
 EMBEDDER_PORT = int(os.getenv("EMBEDDER_PORT", 6000))
 
-grader_prompt = """You are a grader assessing relevance of a retrieved document to a user question. \n                     
+grader_prompt = """You are a grader assessing relevance of a retrieved document to a user question. \n
 Here is the user question: {question} \n
 Here is the retrieved document: \n\n {document} \n\n
 
-If the document contains keywords related to the user question, grade it as relevant. 
-It does not need to be a stringent test. The goal is to filter out erroneous retrievals. 
+If the document contains keywords related to the user question, grade it as relevant.
+It does not need to be a stringent test. The goal is to filter out erroneous retrievals.
 Rules:
-- Do not return the question, the provided document or explanation. 
-- if this document is relevant to the question, return 'yes' otherwise return 'no'. 
+- Do not return the question, the provided document or explanation.
+- if this document is relevant to the question, return 'yes' otherwise return 'no'.
 - Do not include any other details in your response.
 """
 
+
 def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):
-    """
-    Aligns the inputs based on the service type of the current node.
+    """Aligns the inputs based on the service type of the current node.
 
     Parameters:
     - self: Reference to the current instance of the class.
@@ -57,25 +57,21 @@ def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **k
     Returns:
     - inputs: The aligned inputs for the current node.
     """
-    
+
     # Check if the current service type is EMBEDDING
     if self.services[cur_node].service_type == ServiceType.EMBEDDING:
         # Store the input query for later use
         self.input_query = inputs["query"]
         # Set the input for the embedding service
         inputs["input"] = inputs["query"]
-                
+
     # Check if the current service type is RETRIEVER
     if self.services[cur_node].service_type == ServiceType.RETRIEVER:
         # Extract the embedding from the inputs
-        embedding = inputs['data'][0]['embedding']
+        embedding = inputs["data"][0]["embedding"]
         # Align the inputs for the retriever service
-        inputs = {
-            "index_name": llm_parameters_dict["index_name"],  
-            "text": self.input_query,
-            "embedding": embedding
-        }
-                
+        inputs = {"index_name": llm_parameters_dict["index_name"], "text": self.input_query, "embedding": embedding}
+
     return inputs
 
 
@@ -90,9 +86,7 @@ class CodeGenService:
         self.endpoint = str(MegaServiceEndpoint.CODE_GEN)
 
     def add_remote_service(self):
-        """
-        Adds remote microservices to the service orchestrators and defines the flow between them.
-        """
+        """Adds remote microservices to the service orchestrators and defines the flow between them."""
 
         # Define the embedding microservice
         embedding = MicroService(
@@ -137,8 +131,7 @@ class CodeGenService:
         self.megaservice_llm.add(llm)
 
     async def read_streaming_response(self, response: StreamingResponse):
-        """
-        Reads the streaming response from a StreamingResponse object.
+        """Reads the streaming response from a StreamingResponse object.
 
         Parameters:
         - self: Reference to the current instance of the class.
@@ -153,8 +146,7 @@ class CodeGenService:
         return body.decode("utf-8")  # Decode the accumulated byte string to a regular string
 
     async def handle_request(self, request: Request):
-        """
-        Handles the incoming request, processes it through the appropriate microservices,
+        """Handles the incoming request, processes it through the appropriate microservices,
         and returns the response.
 
         Parameters:
@@ -189,7 +181,7 @@ class CodeGenService:
             presence_penalty=chat_request.presence_penalty if chat_request.presence_penalty else 0.0,
             repetition_penalty=chat_request.repetition_penalty if chat_request.repetition_penalty else 1.03,
             stream=stream_opt,
-            index_name=chat_request.index_name
+            index_name=chat_request.index_name,
         )
 
         # Initialize the initial inputs with the generated prompt
@@ -237,18 +229,20 @@ class CodeGenService:
                                     if r["choices"][0]["text"] == "yes":
                                         # Append the document to the relevant_docs list
                                         relevant_docs.append(doc)
-                                    
+
                 # Update the initial inputs with the relevant documents
-                if len(relevant_docs)>0:
+                if len(relevant_docs) > 0:
                     logger.info(f"[ CodeGenService - handle_request ] {len(relevant_docs)} relevant document\s found.")
                     query = initial_inputs["query"]
                     initial_inputs = {}
                     initial_inputs["retrieved_docs"] = relevant_docs
                     initial_inputs["initial_query"] = query
-                    
+
                 else:
-                    logger.info("[ CodeGenService - handle_request ] Could not find any relevant documents. The query will be used as input to the LLM.")
-                    
+                    logger.info(
+                        "[ CodeGenService - handle_request ] Could not find any relevant documents. The query will be used as input to the LLM."
+                    )
+
             else:
                 # Use the combined retriever and LLM microservice
                 megaservice = self.megaservice_retriever_llm

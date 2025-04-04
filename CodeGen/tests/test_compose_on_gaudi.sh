@@ -30,7 +30,7 @@ function build_docker_images() {
 
     cd $WORKPATH/docker_image_build
     git clone --depth 1 --branch ${opea_branch} https://github.com/opea-project/GenAIComps.git
-    
+
     # Download Gaudi vllm of latest tag
     git clone https://github.com/HabanaAI/vllm-fork.git && cd vllm-fork
     VLLM_VER=$(git describe --tags "$(git rev-list --tags --max-count=1)")
