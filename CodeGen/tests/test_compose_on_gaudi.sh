@@ -92,6 +92,15 @@ function validate_services() {
             echo "[ $SERVICE_NAME ] Data preparation failed..."
         fi
 
+    # if [[ "$SERVICE_NAME" == "gradio" ]]; then
+    #     local HTTP_STATUS=$(curl "$URL")
+
+    #     if [ "$HTTP_STATUS" -eq 200 ]; then
+    #         echo "[ $SERVICE_NAME ] HTTP status is 200. UI server is running successfully..."
+    #     else
+    #         echo "[ $SERVICE_NAME ] UI server has failed..."
+    #     fi
+
     else
         local HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST -d "$INPUT_DATA" -H 'Content-Type: application/json' "$URL")
         if [ "$HTTP_STATUS" -eq 200 ]; then
@@ -158,7 +167,7 @@ function validate_megaservice() {
         "${ip_address}:7778/v1/codegen" \
         "print" \
         "mega-codegen" \
-        "codegen-xeon-backend-server" \
+        "codegen-gaudi-backend-server" \
         '{ "index_name": "test_redis", "agents_flag": "True", "messages": "def print_hello_world():", "max_tokens": 256}'
 
 }
@@ -191,6 +200,18 @@ function validate_frontend() {
     fi
 }
 
+function validate_gradio() {
+    local URL="http://${ip_address}:5173/health"
+    local HTTP_STATUS=$(curl "$URL")
+    local SERVICE_NAME="Gradio"
+
+    if [ "$HTTP_STATUS" = '{"status":"ok"}' ]; then
+        echo "[ $SERVICE_NAME ] HTTP status is 200. UI server is running successfully..."
+    else
+        echo "[ $SERVICE_NAME ] UI server has failed..."
+    fi            
+}
+
 function stop_docker() {
     local docker_profile="$1"
 
@@ -203,11 +224,11 @@ function main() {
     docker_compose_profiles=("codegen-gaudi-vllm" "codegen-gaudi-tgi")
     docker_llm_container_names=("vllm-gaudi-server" "tgi-gaudi-server")
 
-    # get number of profiels and container
+    # get number of profiles and container
     len_profiles=${#docker_compose_profiles[@]}
     len_containers=${#docker_llm_container_names[@]}
 
-    # number of profiels and docker container names must be matched
+    # number of profiles and docker container names must be matched
     if [ ${len_profiles} -ne ${len_containers} ]; then
         echo "Error: number of profiles ${len_profiles} and container names ${len_containers} mismatched"
         exit 1
@@ -229,6 +250,7 @@ function main() {
 
         validate_microservices "${docker_llm_container_names[${i}]}"
         validate_megaservice
+        validate_gradio
         # validate_frontend
 
         stop_docker "${docker_compose_profiles[${i}]}"

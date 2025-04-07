@@ -190,6 +190,18 @@ function validate_frontend() {
     fi
 }
 
+function validate_gradio() {
+    local URL="http://${ip_address}:5173/health"
+    local HTTP_STATUS=$(curl "$URL")
+    local SERVICE_NAME="Gradio"
+
+    if [ "$HTTP_STATUS" = '{"status":"ok"}' ]; then
+        echo "[ $SERVICE_NAME ] HTTP status is 200. UI server is running successfully..."
+    else
+        echo "[ $SERVICE_NAME ] UI server has failed..."
+    fi            
+}
+
 
 function stop_docker() {
     local docker_profile="$1"
@@ -229,6 +241,7 @@ function main() {
 
         validate_microservices "${docker_llm_container_names[${i}]}"
         validate_megaservice
+        validate_gradio
         # validate_frontend
 
         stop_docker "${docker_compose_profiles[${i}]}"
