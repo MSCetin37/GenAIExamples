@@ -30,7 +30,7 @@ function build_docker_images() {
 
     cd $WORKPATH/docker_image_build
     git clone --depth 1 --branch ${opea_branch} https://github.com/opea-project/GenAIComps.git
-    
+
     git clone https://github.com/vllm-project/vllm.git && cd vllm
     VLLM_VER="v0.8.2"
     echo "Check out vLLM tag ${VLLM_VER}"
@@ -239,4 +239,3 @@ function main() {
 }
 
 main
-

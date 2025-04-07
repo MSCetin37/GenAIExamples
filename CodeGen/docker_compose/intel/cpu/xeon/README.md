@@ -111,6 +111,7 @@ export https_proxy=${your_https_proxy}
 ```
 
 ## Start the Docker Containers for All Services
+
 Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
 ```bash
@@ -132,8 +133,8 @@ Then run the command `docker images`, you will have the following Docker images:
 - `opea/dataprep`
 - `opea/embedding`
 - `opea/llm-textgen`
-- `opea/retriever` 
-- `redis/redis-stack` 
+- `opea/retriever`
+- `redis/redis-stack`
 
 #### vLLM service:
 
@@ -150,8 +151,8 @@ Then run the command `docker images`, you will have the following Docker images:
 - `opea/dataprep`
 - `opea/embedding`
 - `opea/llm-textgen`
-- `opea/retriever` 
-- `redis/redis-stack` 
+- `opea/retriever`
+- `redis/redis-stack`
 - `opea/vllm`
 
 ### Validate the MicroServices and MegaService
@@ -177,16 +178,16 @@ Then run the command `docker images`, you will have the following Docker images:
 
 3. Dataprep Microservice
 
-    Make sure to replace the file name placeholders with your correct file name
+   Make sure to replace the file name placeholders with your correct file name
 
-      ```bash
-      curl http://${host_ip}:6007/v1/dataprep/ingest \
-     -X POST \
-     -H "Content-Type: multipart/form-data" \
-     -F "files=@./file1.pdf" \
-     -F "files=@./file2.txt" \ 
-     -F "index_name=my_API_document"
-      ```
+   ```bash
+   curl http://${host_ip}:6007/v1/dataprep/ingest \
+   -X POST \
+   -H "Content-Type: multipart/form-data" \
+   -F "files=@./file1.pdf" \
+   -F "files=@./file2.txt" \
+   -F "index_name=my_API_document"
+   ```
 
 4. MegaService
 
@@ -196,16 +197,16 @@ Then run the command `docker images`, you will have the following Docker images:
      -d '{"messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
    ```
 
-    CodeGen service with RAG and Agents activated based on an index.
-   
-    ```bash
-    curl http://${host_ip}:7778/v1/codegen \
-      -H "Content-Type: application/json" \
-      -d '{"agents_flag": "True", "index_name": "my_API_document", "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
-    ```
-   
+   CodeGen service with RAG and Agents activated based on an index.
+
+   ```bash
+   curl http://${host_ip}:7778/v1/codegen \
+     -H "Content-Type: application/json" \
+     -d '{"agents_flag": "True", "index_name": "my_API_document", "messages": "Implement a high-level API for a TODO list application. The API takes as input an operation request and updates the TODO list in place. If the request is invalid, raise an exception."}'
+   ```
 
 ## 🚀 Launch the Gradio Based UI (Recommended)
+
 To access the Gradio frontend URL, follow the steps in [this README](../../../../ui/gradio/README.md)
 
 Code Generation Tab
@@ -221,7 +222,6 @@ Uploading a Knowledge Index
 Here is an example of running a query in the Gradio UI using an Index:
 
 ![project-screenshot](../../../../assets/img/codegen_gradio_ui_query.png)
-
 
 ## 🚀 Launch the Svelte Based UI (Optional)
 

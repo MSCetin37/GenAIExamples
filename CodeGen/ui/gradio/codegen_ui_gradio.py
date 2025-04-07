@@ -6,17 +6,15 @@
 # Additionally, three small text boxes have been added for managing file dataframe parameters.
 
 import argparse
-import os
-from pathlib import Path
-import gradio as gr
-import requests
-import pandas as pd
-import os
-import uvicorn
 import json
-import argparse
-from urllib.parse import urlparse
+import os
 from pathlib import Path
+from urllib.parse import urlparse
+
+import gradio as gr
+import pandas as pd
+import requests
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -34,21 +32,17 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 tmp_upload_folder = "/tmp/gradio/"
 
 
-
 host_ip = os.getenv("host_ip")
 DATAPREP_REDIS_PORT = os.getenv("DATAPREP_REDIS_PORT", 6007)
 DATAPREP_ENDPOINT = os.getenv("DATAPREP_ENDPOINT", f"http://{host_ip}:{DATAPREP_REDIS_PORT}/v1/dataprep")
 MEGA_SERVICE_PORT = os.getenv("MEGA_SERVICE_PORT", 7778)
 
-backend_service_endpoint = os.getenv(
-        "BACKEND_SERVICE_ENDPOINT", f"http://{host_ip}:{MEGA_SERVICE_PORT}/v1/codegen"
-    )
+backend_service_endpoint = os.getenv("BACKEND_SERVICE_ENDPOINT", f"http://{host_ip}:{MEGA_SERVICE_PORT}/v1/codegen")
 
 dataprep_ingest_endpoint = f"{DATAPREP_ENDPOINT}/ingest"
 dataprep_get_files_endpoint = f"{DATAPREP_ENDPOINT}/get"
 dataprep_delete_files_endpoint = f"{DATAPREP_ENDPOINT}/delete"
 dataprep_get_indices_endpoint = f"{DATAPREP_ENDPOINT}/indices"
-
 
 
 # Define the functions that will be used in the app
@@ -82,7 +76,7 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
                 value = ingest_url(file, index, chunk_size, chunk_overlap)
                 requests.append(value)
                 yield value
-            elif file_ext in ['.pdf', '.txt']:
+            elif file_ext in [".pdf", ".txt"]:
                 yield (
                     gr.Textbox(
                         visible=True,
@@ -107,7 +101,7 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
         if is_valid_url(media):
             value = ingest_url(media, index, chunk_size, chunk_overlap)
             yield value
-        elif file_ext in ['.pdf', '.txt']:
+        elif file_ext in [".pdf", ".txt"]:
             value = ingest_file(media, index, chunk_size, chunk_overlap)
             yield value
         else:
@@ -119,6 +113,7 @@ def upload_media(media, index=None, chunk_size=1500, chunk_overlap=100):
             )
             return
 
+
 def generate_code(query, index=None, use_agent=False):
     if index is None or index == "None":
         input_dict = {"messages": query, "agents_flag": use_agent}
@@ -127,16 +122,16 @@ def generate_code(query, index=None, use_agent=False):
 
     print("Query is ", input_dict)
     headers = {"Content-Type": "application/json"}
-    
-    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)        
+
+    response = requests.post(url=backend_service_endpoint, headers=headers, data=json.dumps(input_dict), stream=True)
 
     line_count = 0
     for line in response.iter_lines():
         line_count += 1
         if line:
-            line = line.decode('utf-8')
+            line = line.decode("utf-8")
             if line.startswith("data: "):  # Only process lines starting with "data: "
-                json_part = line[len("data: "):]  # Remove the "data: " prefix
+                json_part = line[len("data: ") :]  # Remove the "data: " prefix
             else:
                 json_part = line
             if json_part.strip() == "[DONE]":  # Ignore the DONE marker
@@ -150,16 +145,16 @@ def generate_code(query, index=None, use_agent=False):
                             yield choice["text"]
             except json.JSONDecodeError:
                 print("Error parsing JSON:", json_part)
-    
+
     if line_count == 0:
-        yield f"Something went wrong, No Response Generated! \nIf you are using an Index, try uploading your media again with a smaller chunk size to avoid exceeding the token max. \
+        yield "Something went wrong, No Response Generated! \nIf you are using an Index, try uploading your media again with a smaller chunk size to avoid exceeding the token max. \
         \nOr, check the Use Agent box and try again."
 
 
 def ingest_file(file, index=None, chunk_size=100, chunk_overlap=150):
     headers = {
-         # "Content-Type: multipart/form-data"
-        }
+        # "Content-Type: multipart/form-data"
+    }
     file_input = {"files": open(file, "rb")}
 
     if index:
@@ -172,17 +167,23 @@ def ingest_file(file, index=None, chunk_size=100, chunk_overlap=150):
 
     return response.text
 
+
 def ingest_url(url, index=None, chunk_size=100, chunk_overlap=150):
     url = str(url)
     if not is_valid_url(url):
         return "Invalid URL entered. Please enter a valid URL"
-    
+
     headers = {
-         # "Content-Type: multipart/form-data"
-        }
+        # "Content-Type: multipart/form-data"
+    }
 
     if index:
-        url_input = {"link_list": json.dumps([url]), "index_name": index, "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
+        url_input = {
+            "link_list": json.dumps([url]),
+            "index_name": index,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+        }
     else:
         url_input = {"link_list": json.dumps([url]), "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
     response = requests.post(url=dataprep_ingest_endpoint, headers=headers, data=url_input)
@@ -197,6 +198,7 @@ def is_valid_url(url):
         return all([result.scheme, result.netloc])
     except ValueError:
         return False
+
 
 def get_files(index=None):
     headers = {
@@ -215,6 +217,7 @@ def get_files(index=None):
         table = response.json()
         return table
 
+
 def update_table(index=None):
     if index == "All Files":
         index = None
@@ -225,11 +228,13 @@ def update_table(index=None):
     else:
         df = pd.DataFrame(files)
         return df
-    
+
+
 def update_indices():
     indices = get_indices()
     df = pd.DataFrame(indices, columns=["File Indices"])
     return df
+
 
 def delete_file(file, index=None):
     # Remove the selected file from the file list
@@ -244,6 +249,7 @@ def delete_file(file, index=None):
     table = update_table()
     return response.text
 
+
 def delete_all_files(index=None):
     # Remove all files from the file list
     headers = {
@@ -251,8 +257,9 @@ def delete_all_files(index=None):
     }
     response = requests.post(url=dataprep_delete_files_endpoint, headers=headers, data='{"file_path": "all"}')
     table = update_table()
-    
+
     return "Delete All status: " + response.text
+
 
 def get_indices():
     headers = {
@@ -263,18 +270,19 @@ def get_indices():
     indices += response.json()
     return indices
 
+
 def update_indices_dropdown():
     new_dd = gr.update(choices=get_indices(), value="None")
     return new_dd
-    
+
 
 def get_file_names(files):
     file_str = ""
     if not files:
         return file_str
-    
+
     for file in files:
-      file_str += file + '\n'
+        file_str += file + "\n"
     file_str.strip()
     return file_str
 
@@ -291,17 +299,23 @@ with gr.Blocks() as ui:
                 db_refresh_button = gr.Button("Refresh Dropdown", scale=0.1)
                 db_refresh_button.click(update_indices_dropdown, outputs=database_dropdown)
                 use_agent = gr.Checkbox(label="Use Agent", container=False)
-        
+
         generate_button = gr.Button("Generate Code")
-        generate_button.click(conversation_history, inputs=[prompt_input, database_dropdown, use_agent, chatbot], outputs=chatbot)
+        generate_button.click(
+            conversation_history, inputs=[prompt_input, database_dropdown, use_agent, chatbot], outputs=chatbot
+        )
 
     with gr.Tab("Resource Management"):
         # File management components
         with gr.Row():
             with gr.Column(scale=1):
                 index_name_input = gr.Textbox(label="Index Name")
-                chunk_size_input = gr.Textbox(label="Chunk Size", value="1500", placeholder="Enter an integer (default: 1500)")
-                chunk_overlap_input = gr.Textbox(label="Chunk Overlap", value="100", placeholder="Enter an integer (default: 100)")
+                chunk_size_input = gr.Textbox(
+                    label="Chunk Size", value="1500", placeholder="Enter an integer (default: 1500)"
+                )
+                chunk_overlap_input = gr.Textbox(
+                    label="Chunk Overlap", value="100", placeholder="Enter an integer (default: 100)"
+                )
             with gr.Column(scale=3):
                 file_upload = gr.File(label="Upload Files", file_count="multiple")
                 url_input = gr.Textbox(label="Media to be ingested (Append URL's in a new line)")
@@ -312,11 +326,15 @@ with gr.Blocks() as ui:
                 file_table = gr.Dataframe(interactive=False, value=update_indices())
                 refresh_button = gr.Button("Refresh", variant="primary", size="sm")
                 refresh_button.click(update_indices, outputs=file_table)
-                upload_button.click(upload_media, inputs=[url_input, index_name_input, chunk_size_input, chunk_overlap_input], outputs=upload_status)
-                
+                upload_button.click(
+                    upload_media,
+                    inputs=[url_input, index_name_input, chunk_size_input, chunk_overlap_input],
+                    outputs=upload_status,
+                )
+
                 delete_all_button = gr.Button("Delete All", variant="primary", size="sm")
                 delete_all_button.click(delete_all_files, outputs=upload_status)
-      
+
 
 ui.queue()
 app = gr.mount_gradio_app(app, ui, path="/")
@@ -335,10 +353,7 @@ if __name__ == "__main__":
     DATAPREP_ENDPOINT = os.getenv("DATAPREP_ENDPOINT", f"http://{host_ip}:{DATAPREP_REDIS_PORT}/v1/dataprep")
     MEGA_SERVICE_PORT = os.getenv("MEGA_SERVICE_PORT", 7778)
 
-
-    backend_service_endpoint = os.getenv(
-        "BACKEND_SERVICE_ENDPOINT", f"http://{host_ip}:{MEGA_SERVICE_PORT}/v1/codegen"
-    )
+    backend_service_endpoint = os.getenv("BACKEND_SERVICE_ENDPOINT", f"http://{host_ip}:{MEGA_SERVICE_PORT}/v1/codegen")
 
     args = parser.parse_args()
     global gateway_addr
@@ -347,6 +362,5 @@ if __name__ == "__main__":
     dataprep_ingest_addr = dataprep_ingest_endpoint
     global dataprep_get_files_addr
     dataprep_get_files_addr = dataprep_get_files_endpoint
-
 
     uvicorn.run(app, host=args.host, port=args.port)
