@@ -103,81 +103,7 @@ export http_proxy=${your_http_proxy}
 export https_proxy=${your_https_proxy}
 ```
 
-## 🚀 Build Docker Images
-
-First of all, you need to build the Docker images locally. This step can be ignored after the Docker images published to the Docker Hub.
-
-### 1. Build the LLM Docker Image
-
-```bash
-git clone https://github.com/opea-project/GenAIComps.git
-cd GenAIComps
-docker build -t opea/llm-textgen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/llms/src/text-generation/Dockerfile .
-```
-
-### 2. Build the Retriever Image
-
-```bash
-docker build -t opea/retriever:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/retrievers/src/Dockerfile .
-```
-
-### 3. Build the Dataprep Image
-
-```bash
-docker build -t opea/dataprep:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/src/Dockerfile .
-```
-
-### 4. Build the MegaService Docker Image
-
-To construct the Mega Service, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `codegen.py` Python script. Build the MegaService Docker image via the command below:
-
-```bash
-git clone https://github.com/opea-project/GenAIExamples
-cd GenAIExamples/CodeGen
-docker build -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
-```
-
-### 5. Build the UI Gradio Image (Recommended)
-
-Build the frontend Gradio image via the command below:
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-gradio-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f docker/Dockerfile.gradio .
-```
-
-### 5a. Build CodeGen React UI Docker Image (Optional)
-
-Build react frontend Docker image via below command:
-
-**Export the value of the public IP address of your Xeon server to the `host_ip` environment variable**
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build --no-cache -t opea/codegen-react-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.react .
-```
-
-### 5b. Build the UI Docker Image
-
-Construct the frontend Docker image via the command below:
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
-```
-
-Then run the command `docker images`, you will have the following Docker images:
-
-- `opea/llm-textgen:latest`
-- `opea/retriever:latest`
-- `opea/dataprep:latest`
-- `opea/codegen:latest`
-- `opea/codegen-gradio-ui:latest` (Recommended)
-- `opea/codegen-ui:latest` (Optional)
-- `opea/codegen-react-ui:latest` (Optional)
-
-### Start the Docker Containers for All Services
-#### Deploy CodeGen on Gaudi
+## Start the Docker Containers for All Services
 
 Find the corresponding [compose.yaml](./docker_compose/intel/hpu/gaudi/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
@@ -196,24 +122,6 @@ docker compose --profile codegen-gaudi-vllm up -d
 ```
 
 Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build docker images from source.
-
-#### Deploy CodeGen on Xeon
-
-Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml). User could start CodeGen based on TGI or vLLM service:
-
-```bash
-cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
-```
-
-TGI service:
-```bash
-docker compose --profile codegen-xeon-tgi up -d
-```
-
-vLLM service:
-```bash
-docker compose --profile codegen-xeon-vllm up -d
-```
 
 ### Validate the MicroServices and MegaService
 

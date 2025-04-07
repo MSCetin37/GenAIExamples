@@ -112,8 +112,8 @@ By default, the LLM model is set to a default value as listed below:
 | ------------ | --------------------------------------------------------------------------------------- |
 | LLM_MODEL_ID | [Qwen/Qwen2.5-Coder-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct) |
 
-[Qwen/Qwen2.5-Coder-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct) may be a gated model that requires submitting an access request through Hugging Face. You can replace it with another model.
-Change the `LLM_MODEL_ID` below for your needs, such as: [deepseek-ai/deepseek-coder-6.7b-instruct](https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct)
+[Qwen/Qwen2.5-Coder-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct) may be a gated model that requires submitting an access request through Hugging Face. You can replace it with another model for m.
+Change the `LLM_MODEL_ID` below for your needs, such as: [Qwen/Qwen2.5-Coder-32-Instruct](https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct), [deepseek-ai/deepseek-coder-6.7b-instruct](https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct)
 
 If you choose to use `meta-llama/CodeLlama-7b-hf` as LLM model, you will need to visit [here](https://huggingface.co/meta-llama/CodeLlama-7b-hf), click the `Expand to review and access` button to ask for model access.
 
@@ -156,12 +156,12 @@ cd GenAIExamples/CodeGen/docker_compose/intel/hpu/gaudi
 
 TGI service:
 ```bash
-docker compose --profile codegen-xeon-tgi up -d
+docker compose --profile codegen-gaudi-tgi up -d
 ```
 
 vLLM service:
 ```bash
-docker compose --profile codegen-xeon-vllm up -d
+docker compose --profile codegen-gaudi-vllm up -d
 ```
 
 Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build docker images from source.

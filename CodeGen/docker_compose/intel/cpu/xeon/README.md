@@ -110,101 +110,49 @@ export http_proxy=${your_http_proxy}
 export https_proxy=${your_https_proxy}
 ```
 
-## 🚀 Build Docker Images
-
-Should the Docker image you seek not yet be available on Docker Hub, you can build the Docker image locally.
-
-### 1. Build the LLM Docker Image
+## Start the Docker Containers for All Services
+Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml). User could start CodeGen based on TGI or vLLM service:
 
 ```bash
-git clone https://github.com/opea-project/GenAIComps.git
-cd GenAIComps
-docker build -t opea/llm-textgen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/llms/src/text-generation/Dockerfile .
+cd GenAIExamples/CodeGen/docker_compose/intel/cpu/xeon
 ```
 
-### 2. Build the Retriever Image
+#### TGI service:
 
 ```bash
-docker build -t opea/retriever:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/retrievers/src/Dockerfile .
-```
-
-### 3. Build the Dataprep Image
-
-```bash
-docker build -t opea/dataprep:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/src/Dockerfile .
-```
-
-### 4. Build the MegaService Docker Image
-
-To construct the Mega Service, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `codegen.py` Python script. Build the MegaService Docker image via the command below:
-
-```bash
-git clone https://github.com/opea-project/GenAIExamples
-cd GenAIExamples/CodeGen
-docker build -t opea/codegen:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
-```
-
-### 5. Build the UI Gradio Image (Recommended)
-
-Build the frontend Gradio image via the command below:
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-gradio-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f docker/Dockerfile.gradio .
-```
-
-### 5a. Build CodeGen React UI Docker Image (Optional)
-
-Build react frontend Docker image via below command:
-
-**Export the value of the public IP address of your Xeon server to the `host_ip` environment variable**
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build --no-cache -t opea/codegen-react-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile.react .
-```
-
-### 5b. Build the UI Docker Image
-
-Construct the frontend Docker image via the command below:
-
-```bash
-cd GenAIExamples/CodeGen/ui
-docker build -t opea/codegen-ui:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f ./docker/Dockerfile .
+docker compose --profile codegen-xeon-tgi up -d
 ```
 
 Then run the command `docker images`, you will have the following Docker images:
 
-- `opea/llm-textgen:latest`
-- `opea/retriever:latest`
-- `opea/dataprep:latest`
-- `opea/codegen:latest`
-- `opea/codegen-gradio-ui:latest` (Recommended)
-- `opea/codegen-ui:latest` (Optional)
-- `opea/codegen-react-ui:latest` (Optional)
+- `ghcr.io/huggingface/text-embeddings-inference:cpu-1.5`
+- `ghcr.io/huggingface/text-generation-inference:2.4.0-intel-cpu`
+- `opea/codegen-gradio-ui`
+- `opea/codegen`
+- `opea/dataprep`
+- `opea/embedding`
+- `opea/llm-textgen`
+- `opea/retriever` 
+- `redis/redis-stack` 
 
-
-### Start the Docker Containers for All Services
-
-CodeGen support TGI service and vLLM service, you can choose start either one of them.
-
-Start CodeGen based on TGI service:
+#### vLLM service:
 
 ```bash
-cd GenAIExamples/CodeGen/docker_compose
-source set_env.sh
-cd intel/cpu/xeon
-docker compose --profile codegen-xeon-tgi up -d
-```
-
-Start CodeGen based on vLLM service:
-
-```bash
-cd GenAIExamples/CodeGen/docker_compose
-source set_env.sh
-cd intel/cpu/xeon
 docker compose --profile codegen-xeon-vllm up -d
 ```
+
+Then run the command `docker images`, you will have the following Docker images:
+
+- `ghcr.io/huggingface/text-embeddings-inference:cpu-1.5`
+- `ghcr.io/huggingface/text-generation-inference:2.4.0-intel-cpu`
+- `opea/codegen-gradio-ui`
+- `opea/codegen`
+- `opea/dataprep`
+- `opea/embedding`
+- `opea/llm-textgen`
+- `opea/retriever` 
+- `redis/redis-stack` 
+- `opea/vllm`
 
 ### Validate the MicroServices and MegaService
 
